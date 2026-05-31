@@ -1,0 +1,197 @@
+.wrap {
+  width: 100%;
+  max-width: 680px;
+  padding: 1rem 0 2rem;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.backBtn, .backBtnBottom {
+  align-self: flex-start;
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: 1px solid #2a3a55;
+  background: #162232;
+  color: #8aaccc;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.backBtn:hover, .backBtnBottom:hover {
+  background: #1e3050;
+}
+
+.heading {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #c8d8f0;
+  margin: 0;
+}
+
+.sub {
+  font-size: 13px;
+  color: #4a6a8a;
+  margin-top: -1rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5a9abf;
+  border-bottom: 1px solid #1e2d3d;
+  padding-bottom: 6px;
+}
+
+.text {
+  font-size: 14px;
+  color: #8aaccc;
+  line-height: 1.65;
+}
+
+.list {
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.list li {
+  font-size: 14px;
+  color: #8aaccc;
+  line-height: 1.6;
+}
+
+.list li strong {
+  color: #c8d8f0;
+}
+
+.list li em {
+  color: #a0c8e0;
+  font-style: italic;
+}
+
+.redDot { color: #e24b4a; font-weight: 700; }
+.whiteDot { color: #6b7a99; }
+
+/* ── Fleet table ─────────── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: left;
+  color: #4a6a8a;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-bottom: 1px solid #1e2d3d;
+}
+
+.table td {
+  padding: 7px 10px;
+  color: #8aaccc;
+  border-bottom: 1px solid #111d2a;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.shipBlocks {
+  display: flex;
+  gap: 3px;
+}
+
+.block {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: #1e4d8c;
+  border: 1px solid #2a6496;
+  border-radius: 2px;
+}
+
+/* ── Difficulty blocks ───── */
+.diffRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.diffBlock {
+  flex: 1;
+  min-width: 200px;
+  background: #0f1923;
+  border: 1px solid #1e2d3d;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.diffBlock strong {
+  font-size: 14px;
+  color: #c8d8f0;
+}
+
+.diffBlock p {
+  font-size: 13px;
+  color: #6a8aaa;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.diffBlock em {
+  color: #7aaccc;
+  font-style: italic;
+}
+
+.diffEmoji {
+  font-size: 20px;
+}
+
+/* ── Legend ─────────────── */
+.legendGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #8aaccc;
+}
+
+.legendCell {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lgShip  { background: #1e4d8c; border: 1px solid #2a6496; }
+.lgHit   { background: #8b1a1a; border: 1px solid #c0392b; }
+.lgSunk  { background: #5c0e0e; border: 1px solid #8b1a1a; }
+.lgMiss  { background: #1a2233; border: 1px solid #2a3a55; }

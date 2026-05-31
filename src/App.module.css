@@ -1,0 +1,359 @@
+.app {
+  width: 100%;
+  max-width: 780px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* ── Welcome screen ─────────── */
+.welcomeWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 2rem 1rem;
+}
+
+.logoAnchor {
+  margin-bottom: 0.25rem;
+}
+
+.logoSvg {
+  width: 100px;
+  height: 75px;
+}
+
+.bigTitle {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #c8d8f0;
+  text-align: center;
+  line-height: 1;
+}
+
+.tagline {
+  font-size: 14px;
+  color: #5a7a9a;
+  letter-spacing: 0.06em;
+  text-align: center;
+  margin-top: -0.5rem;
+}
+
+.diffSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0.5rem;
+}
+
+.diffLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4a6a8a;
+}
+
+.diffCards {
+  display: flex;
+  gap: 12px;
+}
+
+.diffCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 28px;
+  border-radius: 10px;
+  border: 1px solid #1e2d3d;
+  background: #162232;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 130px;
+}
+
+.diffCard:hover {
+  border-color: #2a4060;
+  background: #1a2a40;
+}
+
+.diffSelected {
+  border-color: #3a9ad9 !important;
+  background: #0f2a45 !important;
+}
+
+.diffIcon {
+  font-size: 22px;
+}
+
+.diffName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #c8d8f0;
+}
+
+.diffDesc {
+  font-size: 12px;
+  color: #5a7a9a;
+}
+
+/* ── Header ─────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #c8d8f0;
+}
+
+.diffBadge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+.diffBadgeEasy {
+  color: #5abfdf;
+  border-color: #1e5a7a;
+  background: #0a2030;
+}
+
+.diffBadgeHard {
+  color: #e07070;
+  border-color: #7a1a1a;
+  background: #2a0a0a;
+}
+
+/* ── Status bar ─────────────── */
+.statusBar {
+  background: #162232;
+  border: 1px solid #1e2d3d;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: #a0b8d0;
+  text-align: center;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ── Setup controls ─────────── */
+.setupControls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.shipQueue {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.shipPill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #2a3a55;
+  background: #162232;
+  color: #8aaccc;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.shipPill:hover { background: #1e3050; border-color: #3a6090; }
+
+.pillSelected {
+  border-color: #3a9ad9 !important;
+  background: #0f2a45 !important;
+  color: #7acfff !important;
+}
+
+.pillPlaced {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.orientRow {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.orientBtn {
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: 1px solid #2a3a55;
+  background: #162232;
+  color: #8aaccc;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.orientBtn:hover { background: #1e3050; }
+
+.orientActive {
+  border-color: #3a9ad9 !important;
+  background: #0f2a45 !important;
+  color: #7acfff !important;
+}
+
+.undoBtn {
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: 1px solid #2a3a55;
+  background: #162232;
+  color: #8aaccc;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.undoBtn:hover { background: #2a1a1a; border-color: #c0392b; color: #e07070; }
+
+/* ── Boards ─────────────────── */
+.boards {
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.boardWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.boardLabel {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5a7a9a;
+}
+
+.fleetInfo {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 350px;
+}
+
+.shipTag {
+  font-size: 12px;
+  color: #7aaccc;
+  background: #0f1e2e;
+  border: 1px solid #1e3050;
+  border-radius: 4px;
+  padding: 3px 8px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tagSunk {
+  color: #8b3030 !important;
+  border-color: #5c1a1a !important;
+  text-decoration: line-through;
+}
+
+/* ── Actions ────────────────── */
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.primaryBtn {
+  padding: 10px 28px;
+  border-radius: 8px;
+  border: 1px solid #3a9ad9;
+  background: #0f2a45;
+  color: #7acfff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.primaryBtn:hover { background: #1a4060; }
+.primaryBtn:active { transform: scale(0.97); }
+
+.resetBtn {
+  padding: 8px 22px;
+  border-radius: 8px;
+  border: 1px solid #2a3a55;
+  background: #162232;
+  color: #8aaccc;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.resetBtn:hover { background: #1e3050; }
+
+/* ── Ship badge states ──────── */
+/* intact: default blue */
+.shipTag_intact {
+  color: #7aaccc;
+  border-color: #1e3050;
+  background: #0f1e2e;
+}
+
+/* hit but not sunk: amber warning */
+.shipTag_hit {
+  color: #d4900a !important;
+  border-color: #7a4e08 !important;
+  background: #241500 !important;
+}
+
+/* sunk: red strikethrough */
+.shipTag_sunk {
+  color: #8b3030 !important;
+  border-color: #5c1a1a !important;
+  background: #180808 !important;
+  text-decoration: line-through;
+}
+
+/* ── Welcome actions row ─────── */
+.welcomeActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.rulesBtn {
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: 1px solid #2a3a55;
+  background: #162232;
+  color: #8aaccc;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.rulesBtn:hover { background: #1e3050; }
