@@ -357,3 +357,63 @@
 }
 
 .rulesBtn:hover { background: #1e3050; }
+
+/* ── Mode selection on welcome ── */
+.modeSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.modeCards {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.modeCard {
+  flex: 1;
+  min-width: 220px;
+  max-width: 260px;
+  background: #0f1923;
+  border: 1px solid #1e2d3d;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.modeCardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #c8d8f0;
+}
+
+.modeCardDesc {
+  font-size: 13px;
+  color: #5a7a9a;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.multiBtn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  border: 1px solid #2a6a3a;
+  background: #0a1e12;
+  color: #5ad88a;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s;
+  align-self: stretch;
+  text-align: center;
+}
+.multiBtn:hover { background: #0f2e1a; }

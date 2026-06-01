@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Grid from './Grid';
 import Rules from './Rules';
+import Lobby from './Lobby';
+import MultiplayerGame from './MultiplayerGame';
 import styles from './App.module.css';
 import {
   SHIPS,
@@ -14,7 +16,6 @@ import {
   pickHardShot,
 } from './gameLogic';
 
-// Derive per-ship status: 'intact' | 'hit' | 'sunk'
 function shipStatus(ship, shots) {
   if (ship.sunk) return 'sunk';
   const anyHit = ship.cells.some(c => shots[c] === 'hit');
@@ -22,15 +23,23 @@ function shipStatus(ship, shots) {
 }
 
 export default function App() {
-  const [game, setGame]         = useState(() => makeInitialState('easy'));
-  const [hoverIdx, setHoverIdx] = useState(null);
+  const [game, setGame]             = useState(() => makeInitialState('easy'));
+  const [hoverIdx, setHoverIdx]     = useState(null);
   const [chosenDiff, setChosenDiff] = useState('easy');
-  const [screen, setScreen]     = useState('welcome'); // 'welcome' | 'rules' | 'game'
+  // screen: 'welcome' | 'rules' | 'game' | 'lobby' | 'multiplayer'
+  const [screen, setScreen]         = useState('welcome');
+  // multiplayer session
+  const [mpSession, setMpSession]   = useState(null); // { code, playerId, role }
 
   // ── welcome ──────────────────────────────────────────────────────────
   function beginSetup() {
     setGame(makeInitialState(chosenDiff));
     setScreen('game');
+  }
+
+  function handleLobbyJoined({ code, playerId, role }) {
+    setMpSession({ code, playerId, role });
+    setScreen('multiplayer');
   }
 
   // ── setup: place ship ────────────────────────────────────────────────
@@ -53,28 +62,22 @@ export default function App() {
   }
 
   // ── battle: player shoots ────────────────────────────────────────────
-  // Official rule: turns ALWAYS alternate — one shot per turn, hit or miss.
   function handleEnemyCellClick(i) {
     if (game.phase !== 'play' || game.turn !== 'player') return;
     if (game.playerShots[i] !== null) return;
 
-    const hit       = game.enemyGrid[i] !== null;
-    const hitName   = hit ? game.enemyGrid[i] : null; // ship name stored in grid
-    const newShots  = [...game.playerShots];
-    newShots[i]     = hit ? 'hit' : 'miss';
+    const hit     = game.enemyGrid[i] !== null;
+    const hitName = hit ? game.enemyGrid[i] : null;
+    const newShots = [...game.playerShots];
+    newShots[i]    = hit ? 'hit' : 'miss';
     const newEShips = checkSunk(newShots, game.enemyShips);
     const allSunk   = newEShips.every(s => s.sunk);
     const sunkNow   = newEShips.find(s => s.sunk && s.cells.includes(i));
 
-    // Per official rules: announce hit + ship name, or "You sank my X!" on sink
     let status;
-    if (!hit) {
-      status = '💧 Miss. Enemy is firing back…';
-    } else if (sunkNow) {
-      status = `💥 You sank the enemy ${sunkNow.name}!`;
-    } else {
-      status = `🎯 Hit on the enemy ${hitName}! Enemy is firing back…`;
-    }
+    if (!hit)          status = '💧 Miss. Enemy is firing back…';
+    else if (sunkNow)  status = `💥 You sank the enemy ${sunkNow.name}!`;
+    else               status = `🎯 Hit on the enemy ${hitName}! Enemy is firing back…`;
 
     if (allSunk) {
       setGame(g => ({ ...g, playerShots: newShots, enemyShips: newEShips,
@@ -82,7 +85,6 @@ export default function App() {
       return;
     }
 
-    // Always pass turn to enemy after player fires (hit OR miss)
     setGame(g => ({ ...g, playerShots: newShots, enemyShips: newEShips, turn: 'enemy', status }));
     setTimeout(enemyFire, 850);
   }
@@ -92,11 +94,10 @@ export default function App() {
       const pick = g.difficulty === 'hard'
         ? pickHardShot(g.enemyShots, g.placedShips)
         : pickEasyShot(g.enemyShots);
-
       if (pick === undefined || pick === null) return g;
 
-      const hit      = g.playerGrid[pick] !== null;
-      const hitName  = hit ? g.playerGrid[pick] : null;
+      const hit     = g.playerGrid[pick] !== null;
+      const hitName = hit ? g.playerGrid[pick] : null;
       const newShots = [...g.enemyShots];
       newShots[pick] = hit ? 'hit' : 'miss';
 
@@ -105,24 +106,18 @@ export default function App() {
       const sunkNow   = newPShips.find(s => s.sunk && s.cells.includes(pick));
 
       let status;
-      if (allSunk) {
-        status = '💀 All your ships were sunk. You lose!';
-      } else if (!hit) {
-        status = '💧 Enemy missed. Your turn!';
-      } else if (sunkNow) {
-        status = `💥 Enemy sunk your ${sunkNow.name}! Your turn.`;
-      } else {
-        status = `🎯 Enemy hit your ${hitName}! Your turn.`;
-      }
+      if (allSunk)       status = '💀 All your ships were sunk. You lose!';
+      else if (!hit)     status = '💧 Enemy missed. Your turn!';
+      else if (sunkNow)  status = `💥 Enemy sunk your ${sunkNow.name}! Your turn.`;
+      else               status = `🎯 Enemy hit your ${hitName}! Your turn.`;
 
       return {
         ...g,
         enemyShots:  newShots,
         placedShips: newPShips,
-        phase:       allSunk ? 'over' : 'play',
-        winner:      allSunk ? 'enemy' : null,
-        // Always return turn to player after enemy fires
-        turn:        'player',
+        phase:  allSunk ? 'over' : 'play',
+        winner: allSunk ? 'enemy' : null,
+        turn:   'player',
         status,
       };
     });
@@ -140,10 +135,7 @@ export default function App() {
     }));
   }
 
-  function resetGame() {
-    setScreen('welcome');
-    setHoverIdx(null);
-  }
+  function resetGame() { setScreen('welcome'); setHoverIdx(null); }
 
   function undoLast() {
     setGame(g => {
@@ -156,7 +148,6 @@ export default function App() {
     });
   }
 
-  // ── preview helpers ──────────────────────────────────────────────────
   const previewCells = (() => {
     if (game.phase === 'setup' && game.selectedShip && hoverIdx !== null) {
       const ship = SHIPS.find(s => s.name === game.selectedShip);
@@ -166,21 +157,34 @@ export default function App() {
     return null;
   })();
 
-  const previewValid = previewCells && game.phase === 'setup'
-    ? canPlace(game.playerGrid, previewCells) : true;
+  const previewValid  = previewCells && game.phase === 'setup' ? canPlace(game.playerGrid, previewCells) : true;
+  const allPlaced     = game.placedShips.length === SHIPS.length;
 
-  const allPlaced = game.placedShips.length === SHIPS.length;
-
-  // ── rules screen ─────────────────────────────────────────────────────
+  // ── route ─────────────────────────────────────────────────────────────
   if (screen === 'rules') {
+    return <div className={styles.app}><Rules onBack={() => setScreen('welcome')} /></div>;
+  }
+
+  if (screen === 'lobby') {
     return (
       <div className={styles.app}>
-        <Rules onBack={() => setScreen('welcome')} />
+        <Lobby onJoined={handleLobbyJoined} onBack={() => setScreen('welcome')} />
       </div>
     );
   }
 
-  // ── welcome screen ───────────────────────────────────────────────────
+  if (screen === 'multiplayer' && mpSession) {
+    return (
+      <MultiplayerGame
+        code={mpSession.code}
+        playerId={mpSession.playerId}
+        role={mpSession.role}
+        onLeave={() => { setMpSession(null); setScreen('welcome'); }}
+      />
+    );
+  }
+
+  // ── welcome ───────────────────────────────────────────────────────────
   if (screen === 'welcome') {
     return (
       <div className={styles.app}>
@@ -200,42 +204,56 @@ export default function App() {
           <h1 className={styles.bigTitle}>Naval Strike</h1>
           <p className={styles.tagline}>A game of hidden fleets and precise fire</p>
 
-          <div className={styles.diffSection}>
-            <div className={styles.diffLabel}>Select difficulty</div>
-            <div className={styles.diffCards}>
-              <button
-                className={`${styles.diffCard}${chosenDiff === 'easy' ? ` ${styles.diffSelected}` : ''}`}
-                onClick={() => setChosenDiff('easy')}
-              >
-                <span className={styles.diffIcon}>🌊</span>
-                <span className={styles.diffName}>Easy</span>
-                <span className={styles.diffDesc}>Enemy fires randomly</span>
-              </button>
-              <button
-                className={`${styles.diffCard}${chosenDiff === 'hard' ? ` ${styles.diffSelected}` : ''}`}
-                onClick={() => setChosenDiff('hard')}
-              >
-                <span className={styles.diffIcon}>🎯</span>
-                <span className={styles.diffName}>Hard</span>
-                <span className={styles.diffDesc}>Enemy hunts your ships</span>
-              </button>
+          <div className={styles.modeSection}>
+            <div className={styles.diffLabel}>Game mode</div>
+            <div className={styles.modeCards}>
+              <div className={styles.modeCard}>
+                <div className={styles.modeCardTitle}>🤖 vs Computer</div>
+                <div className={styles.diffCards}>
+                  <button
+                    className={`${styles.diffCard}${chosenDiff === 'easy' ? ` ${styles.diffSelected}` : ''}`}
+                    onClick={() => setChosenDiff('easy')}
+                  >
+                    <span className={styles.diffIcon}>🌊</span>
+                    <span className={styles.diffName}>Easy</span>
+                    <span className={styles.diffDesc}>Random AI</span>
+                  </button>
+                  <button
+                    className={`${styles.diffCard}${chosenDiff === 'hard' ? ` ${styles.diffSelected}` : ''}`}
+                    onClick={() => setChosenDiff('hard')}
+                  >
+                    <span className={styles.diffIcon}>🎯</span>
+                    <span className={styles.diffName}>Hard</span>
+                    <span className={styles.diffDesc}>Hunting AI</span>
+                  </button>
+                </div>
+                <button className={styles.primaryBtn} onClick={beginSetup}>
+                  Deploy fleet →
+                </button>
+              </div>
+
+              <div className={styles.modeCard}>
+                <div className={styles.modeCardTitle}>👥 Multiplayer</div>
+                <p className={styles.modeCardDesc}>
+                  Play against a friend on any device.<br />
+                  Share a room code to connect.
+                </p>
+                <button className={styles.multiBtn} onClick={() => setScreen('lobby')}>
+                  Play online →
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className={styles.welcomeActions}>
-            <button className={styles.primaryBtn} onClick={beginSetup}>
-              Deploy fleet →
-            </button>
-            <button className={styles.rulesBtn} onClick={() => setScreen('rules')}>
-              How to play
-            </button>
-          </div>
+          <button className={styles.rulesBtn} onClick={() => setScreen('rules')}>
+            How to play
+          </button>
         </div>
       </div>
     );
   }
 
-  // ── main game ────────────────────────────────────────────────────────
+  // ── vs AI game ─────────────────────────────────────────────────────────
   return (
     <div className={styles.app}>
       <div className={styles.header}>
@@ -265,36 +283,20 @@ export default function App() {
             })}
           </div>
           <div className={styles.orientRow}>
-            <button
-              className={`${styles.orientBtn}${game.orientation === 'H' ? ` ${styles.orientActive}` : ''}`}
-              onClick={() => setGame(g => ({ ...g, orientation: 'H' }))}
-            >Horizontal</button>
-            <button
-              className={`${styles.orientBtn}${game.orientation === 'V' ? ` ${styles.orientActive}` : ''}`}
-              onClick={() => setGame(g => ({ ...g, orientation: 'V' }))}
-            >Vertical</button>
-            {game.placedShips.length > 0 && (
-              <button className={styles.undoBtn} onClick={undoLast}>Undo</button>
-            )}
+            <button className={`${styles.orientBtn}${game.orientation === 'H' ? ` ${styles.orientActive}` : ''}`} onClick={() => setGame(g => ({ ...g, orientation: 'H' }))}>Horizontal</button>
+            <button className={`${styles.orientBtn}${game.orientation === 'V' ? ` ${styles.orientActive}` : ''}`} onClick={() => setGame(g => ({ ...g, orientation: 'V' }))}>Vertical</button>
+            {game.placedShips.length > 0 && <button className={styles.undoBtn} onClick={undoLast}>Undo</button>}
           </div>
         </div>
       )}
 
       <div className={styles.boards}>
-        {/* Player board */}
         <div className={styles.boardWrap}>
-          <div className={styles.boardLabel}>
-            {game.phase === 'setup' ? 'Your fleet' : 'Your waters'}
-          </div>
+          <div className={styles.boardLabel}>{game.phase === 'setup' ? 'Your fleet' : 'Your waters'}</div>
           <Grid
-            gridData={game.playerGrid}
-            shots={game.enemyShots}
-            ships={game.placedShips}
-            isEnemy={false}
-            phase={game.phase}
-            turn={game.turn}
-            previewCells={game.phase === 'setup' ? previewCells : null}
-            previewValid={previewValid}
+            gridData={game.playerGrid} shots={game.enemyShots} ships={game.placedShips}
+            isEnemy={false} phase={game.phase} turn={game.turn}
+            previewCells={game.phase === 'setup' ? previewCells : null} previewValid={previewValid}
             onCellClick={handlePlayerCellClick}
             onCellEnter={i => game.phase === 'setup' && setHoverIdx(i)}
             onCellLeave={() => game.phase === 'setup' && setHoverIdx(null)}
@@ -303,29 +305,19 @@ export default function App() {
             <div className={styles.fleetInfo}>
               {game.placedShips.map(s => {
                 const st = shipStatus(s, game.enemyShots);
-                return (
-                  <span key={s.name} className={`${styles.shipTag} ${styles['shipTag_' + st]}`}>
-                    {s.name}{st === 'sunk' ? ' ✕' : st === 'hit' ? ' ●' : ''}
-                  </span>
-                );
+                return <span key={s.name} className={`${styles.shipTag} ${styles['shipTag_' + st]}`}>{s.name}{st === 'sunk' ? ' ✕' : st === 'hit' ? ' ●' : ''}</span>;
               })}
             </div>
           )}
         </div>
 
-        {/* Enemy board */}
         {game.phase !== 'setup' && (
           <div className={styles.boardWrap}>
             <div className={styles.boardLabel}>Enemy waters</div>
             <Grid
-              gridData={game.enemyGrid}
-              shots={game.playerShots}
-              ships={game.enemyShips}
-              isEnemy={true}
-              phase={game.phase}
-              turn={game.turn}
-              previewCells={game.phase === 'play' ? previewCells : null}
-              previewValid={true}
+              gridData={game.enemyGrid} shots={game.playerShots} ships={game.enemyShips}
+              isEnemy={true} phase={game.phase} turn={game.turn}
+              previewCells={game.phase === 'play' ? previewCells : null} previewValid={true}
               onCellClick={handleEnemyCellClick}
               onCellEnter={i => setHoverIdx(i)}
               onCellLeave={() => setHoverIdx(null)}
@@ -333,11 +325,7 @@ export default function App() {
             <div className={styles.fleetInfo}>
               {game.enemyShips.map(s => {
                 const st = shipStatus(s, game.playerShots);
-                return (
-                  <span key={s.name} className={`${styles.shipTag} ${styles['shipTag_' + st]}`}>
-                    {s.name}{st === 'sunk' ? ' ✕' : st === 'hit' ? ' ●' : ''}
-                  </span>
-                );
+                return <span key={s.name} className={`${styles.shipTag} ${styles['shipTag_' + st]}`}>{s.name}{st === 'sunk' ? ' ✕' : st === 'hit' ? ' ●' : ''}</span>;
               })}
             </div>
           </div>
@@ -345,14 +333,8 @@ export default function App() {
       </div>
 
       <div className={styles.actions}>
-        {game.phase === 'setup' && allPlaced && (
-          <button className={styles.primaryBtn} onClick={startGame}>
-            Start battle →
-          </button>
-        )}
-        {(game.phase === 'play' || game.phase === 'over') && (
-          <button className={styles.resetBtn} onClick={resetGame}>New game</button>
-        )}
+        {game.phase === 'setup' && allPlaced && <button className={styles.primaryBtn} onClick={startGame}>Start battle →</button>}
+        {(game.phase === 'play' || game.phase === 'over') && <button className={styles.resetBtn} onClick={resetGame}>New game</button>}
       </div>
     </div>
   );

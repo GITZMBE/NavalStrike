@@ -1,0 +1,100 @@
+.waitingWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 2.5rem 1rem;
+}
+
+.roomCodeLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4a6a8a;
+}
+
+.roomCode {
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: #7acfff;
+  font-variant-numeric: tabular-nums;
+  background: #0a1e30;
+  border: 1px solid #1e4060;
+  border-radius: 10px;
+  padding: 12px 28px;
+}
+
+.waitingText {
+  font-size: 14px;
+  color: #5a7a9a;
+  text-align: center;
+  line-height: 1.65;
+}
+
+/* Pulsing spinner */
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #1e2d3d;
+  border-top-color: #3a9ad9;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.leaveBtn {
+  padding: 7px 18px;
+  border-radius: 6px;
+  border: 1px solid #2a3a55;
+  background: #162232;
+  color: #8aaccc;
+  font-size: 13px;
+  cursor: pointer;
+}
+.leaveBtn:hover { background: #2a1a1a; border-color: #c0392b; color: #e07070; }
+
+/* Role badge + code pill in header */
+.roleBadge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid #2a4060;
+  background: #0a1e30;
+  color: #7acfff;
+}
+
+.codePill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid #1e3a55;
+  background: #0a1828;
+  color: #4a8aaa;
+  letter-spacing: 0.12em;
+}
+
+/* Highlight status bar on your turn */
+.myTurnBar {
+  border-color: #3a9ad9 !important;
+  color: #c8d8f0 !important;
+  background: #0f2035 !important;
+}
+
+.errorBar {
+  width: 100%;
+  max-width: 560px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #2a0a0a;
+  border: 1px solid #7a1a1a;
+  color: #e07070;
+  font-size: 13px;
+  text-align: center;
+}
