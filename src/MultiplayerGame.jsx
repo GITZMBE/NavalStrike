@@ -43,6 +43,12 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
     return () => clearInterval(pollRef.current);
   }, [fetchRoom]);
 
+  async function handleLeave() {
+    clearInterval(pollRef.current);
+    try { await api.deleteRoom(code, playerId); } catch (_) {}
+    onLeave();
+  }
+
   // ── local ship placement ─────────────────────────────────────────────
   function handlePlaceCellClick(i) {
     if (!selectedShip) return;
@@ -100,11 +106,11 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
     }
   }
 
-  // ── derived ──────────────────────────────────────────────────────────
+  // ── derived — isReady MUST come before previewCells ──────────────────
   const isMyTurn  = room && room.phase === 'play' && room.turn === role;
   const allPlaced = localShips.length === SHIPS.length;
+  const isReady   = room && (role === 'host' ? room.hostReady : room.guestReady);
 
-  // Local preview cells during setup
   const previewCells = (() => {
     if (room && room.phase === 'setup' && !isReady && selectedShip && hoverIdx !== null) {
       const ship = SHIPS.find(s => s.name === selectedShip);
@@ -114,12 +120,10 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
     return null;
   })();
 
-  const isReady = room && (role === 'host' ? room.hostReady : room.guestReady);
-
   const previewValid = previewCells && room && room.phase === 'setup'
     ? canPlace(localGrid, previewCells) : true;
 
-  // ── render helpers ───────────────────────────────────────────────────
+  // ── status text ──────────────────────────────────────────────────────
   function statusText() {
     if (!room) return 'Connecting…';
     if (room.phase === 'waiting') return `Room code: ${code} — waiting for opponent to join…`;
@@ -137,24 +141,24 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
     return '';
   }
 
-  // ── screens ──────────────────────────────────────────────────────────
-
-  // Waiting for guest to join
+  // ── waiting for guest to join ─────────────────────────────────────────
   if (!room || room.phase === 'waiting') {
     return (
       <div className={styles.app}>
         <div className={mpStyles.waitingWrap}>
           <div className={mpStyles.roomCodeLabel}>Room code</div>
           <div className={mpStyles.roomCode}>{code}</div>
-          <div className={mpStyles.waitingText}>Share this code with your opponent.<br />Waiting for them to join…</div>
+          <div className={mpStyles.waitingText}>
+            Share this code with your opponent.<br />Waiting for them to join…
+          </div>
           <div className={mpStyles.spinner} />
-          <button className={mpStyles.leaveBtn} onClick={onLeave}>Leave room</button>
+          <button className={mpStyles.leaveBtn} onClick={handleLeave}>Leave room</button>
         </div>
       </div>
     );
   }
 
-  // Setup phase — local ship placement
+  // ── setup: placing ships ──────────────────────────────────────────────
   if (room.phase === 'setup' && !isReady) {
     return (
       <div className={styles.app}>
@@ -213,30 +217,33 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
               {submitting ? 'Confirming…' : 'Confirm fleet →'}
             </button>
           )}
+          <button className={mpStyles.leaveBtn} onClick={handleLeave}>Leave room</button>
         </div>
         {error && <div className={mpStyles.errorBar}>{error}</div>}
       </div>
     );
   }
 
-  // Waiting for opponent to place ships
+  // ── waiting for opponent to finish placing ────────────────────────────
   if (room.phase === 'setup' && isReady) {
     return (
       <div className={styles.app}>
         <div className={mpStyles.waitingWrap}>
-          <div className={mpStyles.waitingText}>✅ Your fleet is ready!<br />Waiting for opponent to place their ships…</div>
+          <div className={mpStyles.waitingText}>
+            ✅ Your fleet is ready!<br />Waiting for opponent to place their ships…
+          </div>
           <div className={mpStyles.spinner} />
-          <button className={mpStyles.leaveBtn} onClick={onLeave}>Leave room</button>
+          <button className={mpStyles.leaveBtn} onClick={handleLeave}>Leave room</button>
         </div>
       </div>
     );
   }
 
-  // Battle / over
-  const myShips       = room.myShips       || [];
-  const opponentShips = room.opponentShips || [];
-  const myShots       = room.myShots       || Array(100).fill(null);      // I fired these at opponent
-  const opponentShots = room.opponentShots || Array(100).fill(null);      // opponent fired these at me
+  // ── battle / game over ────────────────────────────────────────────────
+  const myShips        = room.myShips        || [];
+  const opponentShips  = room.opponentShips  || [];
+  const myShots        = room.myShots        || Array(100).fill(null);
+  const opponentShots  = room.opponentShots  || Array(100).fill(null);
 
   return (
     <div className={styles.app}>
@@ -251,7 +258,6 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
       </div>
 
       <div className={styles.boards}>
-        {/* My board — showing opponent's shots against me */}
         <div className={styles.boardWrap}>
           <div className={styles.boardLabel}>Your waters</div>
           <Grid
@@ -279,7 +285,6 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
           </div>
         </div>
 
-        {/* Opponent board — showing my shots against them */}
         <div className={styles.boardWrap}>
           <div className={styles.boardLabel}>Enemy waters</div>
           <Grid
@@ -311,7 +316,9 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
       {error && <div className={mpStyles.errorBar}>{error}</div>}
 
       <div className={styles.actions}>
-        <button className={styles.resetBtn} onClick={onLeave}>Leave game</button>
+        <button className={styles.resetBtn} onClick={handleLeave}>
+          {room.phase === 'over' ? 'New game' : 'Leave game'}
+        </button>
       </div>
     </div>
   );

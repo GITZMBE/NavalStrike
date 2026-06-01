@@ -60,7 +60,9 @@
 
 .diffCards {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .diffCard {
@@ -68,13 +70,14 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 16px 28px;
+  padding: 12px 16px;
   border-radius: 10px;
   border: 1px solid #1e2d3d;
   background: #162232;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
-  min-width: 130px;
+  min-width: 100px;
+  flex: 1;
 }
 
 .diffCard:hover {
@@ -370,24 +373,27 @@
 
 .modeCards {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .modeCard {
   flex: 1;
-  min-width: 220px;
+  min-width: 200px;
   max-width: 260px;
   background: #0f1923;
   border: 1px solid #1e2d3d;
   border-radius: 12px;
-  padding: 18px 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   align-items: flex-start;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .modeCardTitle {
