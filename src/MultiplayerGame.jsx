@@ -5,6 +5,8 @@ import { SHIPS, shipCells, canPlace, placeShipOnGrid } from './gameLogic';
 import styles from './App.module.css';
 import mpStyles from './MultiplayerGame.module.css';
 
+const SESSION_KEY = 'naval_strike_mp_session';
+
 function shipStatus(ship, shots) {
   if (ship.sunk) return 'sunk';
   if (ship.cells && ship.cells.some(c => shots[c] === 'hit')) return 'hit';
@@ -12,12 +14,11 @@ function shipStatus(ship, shots) {
 }
 
 export default function MultiplayerGame({ code, playerId, role, onLeave }) {
-  const [room, setRoom]         = useState(null);
-  const [error, setError]       = useState('');
-  const [hoverIdx, setHoverIdx] = useState(null);
-  const [firing, setFiring]     = useState(false);
+  const [room, setRoom]           = useState(null);
+  const [error, setError]         = useState('');
+  const [hoverIdx, setHoverIdx]   = useState(null);
+  const [firing, setFiring]       = useState(false);
 
-  // Local ship placement state (before submitting)
   const [localGrid, setLocalGrid]       = useState(Array(100).fill(null));
   const [localShips, setLocalShips]     = useState([]);
   const [selectedShip, setSelectedShip] = useState(SHIPS[0].name);
@@ -36,7 +37,6 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
     }
   }, [code, playerId]);
 
-  // Poll every 1.5 s
   useEffect(() => {
     fetchRoom();
     pollRef.current = setInterval(fetchRoom, 1500);
@@ -46,16 +46,16 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
   async function handleLeave() {
     clearInterval(pollRef.current);
     try { await api.deleteRoom(code, playerId); } catch (_) {}
+    try { sessionStorage.removeItem(SESSION_KEY); } catch (_) {}
     onLeave();
   }
 
-  // ── local ship placement ─────────────────────────────────────────────
+  // ── ship placement ───────────────────────────────────────────────────
   function handlePlaceCellClick(i) {
     if (!selectedShip) return;
     const ship  = SHIPS.find(s => s.name === selectedShip);
     const cells = shipCells(i, ship.size, orientation);
     if (!cells || !canPlace(localGrid, cells)) return;
-
     const newGrid  = placeShipOnGrid(localGrid, cells, ship.name);
     const newShips = [...localShips, { name: ship.name, cells, sunk: false }];
     const nextShip = SHIPS.find(s => !newShips.find(p => p.name === s.name));
@@ -67,8 +67,8 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
   function undoLast() {
     if (!localShips.length) return;
     const newShips = [...localShips];
-    const last     = newShips.pop();
-    const newGrid  = [...localGrid];
+    const last = newShips.pop();
+    const newGrid = [...localGrid];
     last.cells.forEach(i => (newGrid[i] = null));
     setLocalGrid(newGrid);
     setLocalShips(newShips);
@@ -94,7 +94,6 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
     if (room.turn !== role) return;
     if (room.myShots[cellIndex] !== null) return;
     if (firing) return;
-
     setFiring(true);
     try {
       await api.fireShot(code, playerId, cellIndex);
@@ -116,7 +115,7 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
       const ship = SHIPS.find(s => s.name === selectedShip);
       return shipCells(hoverIdx, ship.size, orientation);
     }
-    if (room && room.phase === 'play' && isMyTurn && hoverIdx !== null) return [hoverIdx];
+    if (isMyTurn && hoverIdx !== null) return [hoverIdx];
     return null;
   })();
 
@@ -132,8 +131,7 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
       return 'Ships placed! Waiting for opponent…';
     }
     if (room.phase === 'play') {
-      if (room.lastEvent) return room.lastEvent;
-      return isMyTurn ? 'Your turn — click the enemy grid to fire!' : "Opponent's turn — wait…";
+      return room.lastEvent || (isMyTurn ? 'Your turn — fire!' : "Opponent's turn…");
     }
     if (room.phase === 'over') {
       return room.winner === role ? '🏆 You win!' : '💀 You lose!';
@@ -141,7 +139,7 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
     return '';
   }
 
-  // ── waiting for guest to join ─────────────────────────────────────────
+  // ── waiting for guest ────────────────────────────────────────────────
   if (!room || room.phase === 'waiting') {
     return (
       <div className={styles.app}>
@@ -158,7 +156,7 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
     );
   }
 
-  // ── setup: placing ships ──────────────────────────────────────────────
+  // ── setup: placing ships ─────────────────────────────────────────────
   if (room.phase === 'setup' && !isReady) {
     return (
       <div className={styles.app}>
@@ -202,6 +200,7 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
               isEnemy={false}
               phase="setup"
               turn={null}
+              disabled={false}
               previewCells={previewCells}
               previewValid={previewValid}
               onCellClick={handlePlaceCellClick}
@@ -224,7 +223,7 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
     );
   }
 
-  // ── waiting for opponent to finish placing ────────────────────────────
+  // ── waiting for opponent to finish placing ───────────────────────────
   if (room.phase === 'setup' && isReady) {
     return (
       <div className={styles.app}>
@@ -239,11 +238,13 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
     );
   }
 
-  // ── battle / game over ────────────────────────────────────────────────
-  const myShips        = room.myShips        || [];
-  const opponentShips  = room.opponentShips  || [];
-  const myShots        = room.myShots        || Array(100).fill(null);
-  const opponentShots  = room.opponentShots  || Array(100).fill(null);
+  // ── battle / game over ───────────────────────────────────────────────
+  const myShips       = room.myShips       || [];
+  const opponentShips = room.opponentShips || [];
+  const myShots       = room.myShots       || Array(100).fill(null);
+  const opponentShots = room.opponentShots || Array(100).fill(null);
+  const isOver        = room.phase === 'over';
+  const iWon          = isOver && room.winner === role;
 
   return (
     <div className={styles.app}>
@@ -253,11 +254,26 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
         <span className={mpStyles.codePill}>{code}</span>
       </div>
 
+      {/* Turn indicator banner */}
+      {room.phase === 'play' && (
+        <div className={`${styles.turnBanner} ${isMyTurn ? styles.turnBannerYours : styles.turnBannerWait}`}>
+          {isMyTurn ? '⚡ Your turn — fire!' : '⏳ Waiting for opponent…'}
+        </div>
+      )}
+
+      {/* Game over banner */}
+      {isOver && (
+        <div className={`${styles.turnBanner} ${iWon ? styles.turnBannerYours : styles.turnBannerWait}`}>
+          {iWon ? '🏆 Victory! You sunk the fleet!' : '💀 Defeat — your fleet was destroyed!'}
+        </div>
+      )}
+
       <div className={`${styles.statusBar} ${isMyTurn ? mpStyles.myTurnBar : ''}`}>
         {statusText()}
       </div>
 
       <div className={styles.boards}>
+        {/* My board */}
         <div className={styles.boardWrap}>
           <div className={styles.boardLabel}>Your waters</div>
           <Grid
@@ -267,6 +283,7 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
             isEnemy={false}
             phase={room.phase}
             turn={room.turn}
+            disabled={false}
             previewCells={null}
             previewValid={true}
             onCellClick={() => {}}
@@ -285,6 +302,7 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
           </div>
         </div>
 
+        {/* Enemy board */}
         <div className={styles.boardWrap}>
           <div className={styles.boardLabel}>Enemy waters</div>
           <Grid
@@ -294,7 +312,8 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
             isEnemy={true}
             phase={room.phase}
             turn={isMyTurn ? role : 'other'}
-            previewCells={previewCells}
+            disabled={!isMyTurn && room.phase === 'play'}
+            previewCells={isMyTurn ? previewCells : null}
             previewValid={true}
             onCellClick={handleFireShot}
             onCellEnter={i => isMyTurn && setHoverIdx(i)}
@@ -316,8 +335,11 @@ export default function MultiplayerGame({ code, playerId, role, onLeave }) {
       {error && <div className={mpStyles.errorBar}>{error}</div>}
 
       <div className={styles.actions}>
+        {isOver && (
+          <button className={styles.primaryBtn} onClick={handleLeave}>Main menu</button>
+        )}
         <button className={styles.resetBtn} onClick={handleLeave}>
-          {room.phase === 'over' ? 'New game' : 'Leave game'}
+          {isOver ? 'Leave' : 'Leave game'}
         </button>
       </div>
     </div>
